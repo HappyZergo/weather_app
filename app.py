@@ -3,9 +3,6 @@ import datetime
 import requests
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from pygments.lexers import web
-from sqlalchemy import false, true, select
-from sqlalchemy.sql import exists
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -20,12 +17,16 @@ class City(db.Model):
     temp = db.Column(db.Integer)
     description = db.Column(db.String(20))
     date = db.Column(db.Integer)
+    icon = db.Column(db.String(20))
 
-    def __init__(self, name, temp, description, date):
+    def __init__(self,id, name, temp, description, date, icon):
+        self.id = id
         self.name = name
         self.temp = temp
         self.description = description
         self.date = date
+        self.icon = icon
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -38,47 +39,35 @@ def index():
 
             url = 'http://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid=271d1234d3f497eed5b1d80a07b3fcd1'
 
-            weather_data = []
-
             r = requests.get(url.format(new_city)).json()
 
             weather = {
-                'city': new_city ,
-                'temperature': r['main']['temp'],
-                'description':r['weather'][0]['description'],
+                'status': "on server",
+                'id' : r['id'],
+                'name': r['name'] ,
+                'temp': r['main']['temp'],
+                'description': r['weather'][0]['description'],
                 'icon': r['weather'][0]['icon'],
                 'date': datetime.datetime.fromtimestamp(r['dt']).strftime("%d/%m/%y %I:%M"),
             }
 
-            weatherdb = City(weather.get('city'), weather.get('temperature'),weather.get('description'), weather.get('date'))
+            weatherdb = City(weather.get('id'), weather.get('name'), weather.get('temp'), weather.get('description'),  weather.get('date'), weather.get('icon'))
             db.session.add(weatherdb)
             db.session.commit()
 
-            weather_data.append(weather)
-
         else:
-            selcity = select([City.name]).where(City.name == new_city)
-            city = db.session.connection().execute(selcity).fetchone()
+#
+            selid = db.session.query(City.id).filter_by(name = new_city)
+            id = db.session.execute(selid).fetchone()
+            weather = City.query.get(id)
 
-            seltemp = select([City.temp]).where(City.name == new_city)
-            temperature = db.session.connection().execute(seltemp).fetchone()
+        return render_template('weather.html', weather=weather)
 
-            seldescription = select([City.description]).where(City.name == new_city)
-            description = db.session.connection().execute(seldescription).fetchone()
+    else:
+        weather = {
+            'status': "Введите город",
+            'temp': 'Что бы узнать температуру ',
+            'icon': '01d',
+        }
 
-            seldate = select([City.date]).where(City.name == new_city)
-            date = db.session.connection().execute(seldate).fetchone()
-
-            weather = {
-                'status': "on database",
-                'city': str(city),
-                'temperature': str(temperature) ,
-                'description': str(description),
-                'icon': "",
-                'date': str(date),
-            }
-            weather_data = []
-
-            weather_data.append(weather)
-
-    return render_template('weather.html', weather_data=weather_data)
+        return render_template('weather.html', weather = weather)
