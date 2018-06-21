@@ -20,20 +20,18 @@
     </form>
 
     <div class="content">
-         {% for weather in weather_data %}
+
          <img src="http://openweathermap.org/img/w/{{ weather.icon }}.png" alt="Image">
         <p>
-            <span> {{ weather.status }}</span>
-             <br>
-            <span> {{ weather.city }}</span>
+
+            <span> {{ weather.name }}</span>
             <br>
-            <span> {{ weather.temperature }}° C</span>
+            <span> {{ weather.temp }}° C</span>
             <br>
             <span> {{ weather.description }}</span>
             <br>
             <span> {{ weather.date }}</span>
         </p>
-        {% endfor %}
     </div>
 
 </body>
