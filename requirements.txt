@@ -35,7 +35,7 @@ requests==2.18.4
 SecretStorage==2.3.1
 six==1.11.0
 SQLAlchemy==1.2.8
-urllib3==1.22
+urllib3==1.26.17
 urwid==2.0.1
 watchdog==0.8.3
 wcwidth==0.1.7
